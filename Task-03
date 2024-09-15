@@ -1,0 +1,48 @@
+import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+
+# Load the customer purchase data
+customer_data = pd.read_csv('../input/customer_purchases.csv')
+
+# Select the relevant features for clustering
+features = ['total_spent', 'avg_order_value', 'purchase_frequency', 'days_since_last_purchase']
+
+# Scale the features using StandardScaler
+scaler = StandardScaler()
+customer_data[features] = scaler.fit_transform(customer_data[features])
+
+# Determine the optimal number of clusters using the elbow method
+inertia_values = []
+for k in range(2, 11):
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(customer_data[features])
+    inertia_values.append(kmeans.inertia_)
+
+plt.plot(range(2, 11), inertia_values)
+plt.xlabel('Number of Clusters')
+plt.ylabel('Inertia')
+plt.title('Elbow Method')
+plt.show()
+
+# Choose the optimal number of clusters (e.g., k=5)
+kmeans = KMeans(n_clusters=5, random_state=42)
+kmeans.fit(customer_data[features])
+
+# Get the cluster labels for each customer
+customer_data['cluster'] = kmeans.labels_
+
+# Analyze the clusters
+print("Cluster Centers:")
+print(kmeans.cluster_centers_)
+
+print("\nCluster Sizes:")
+print(customer_data['cluster'].value_counts())
+
+# Visualize the clusters
+plt.scatter(customer_data['total_spent'], customer_data['avg_order_value'], c=customer_data['cluster'])
+plt.xlabel('Total Spent')
+plt.ylabel('Average Order Value')
+plt.title('Customer Clusters')
+plt.show()
